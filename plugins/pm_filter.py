@@ -32,21 +32,26 @@ SPELL_CHECK = {}
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def give_filter(client, message):
-    # Ignore messages that are commands (like /start, /help, etc.)
     if message.text.startswith("/"):
         return
 
     loading_msg = await message.reply_text("🔍 Searching for results...")
+
+    files, offset, total_results = await get_search_results(message.text, offset=0, filter=True)
     
+    if not files:
+        await loading_msg.edit("❌ I couldn't find any movie with that name.\n💡 Please check your spelling and try again!")
+        return
+
     k = await manual_filters(client, message)
     if k == False:
         await auto_filter(client, message)
-        
-    # Clean up the loading message after the search completes
+
     try:
         await loading_msg.delete()
     except:
         pass
+
 
 
 @Client.on_callback_query(filters.regex(r"^next"))
