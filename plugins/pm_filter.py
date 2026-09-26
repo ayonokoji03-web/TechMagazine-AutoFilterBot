@@ -32,9 +32,21 @@ SPELL_CHECK = {}
 
 @Client.on_message(filters.group & filters.text & filters.incoming)
 async def give_filter(client, message):
+    # Ignore messages that are commands (like /start, /help, etc.)
+    if message.text.startswith("/"):
+        return
+
+    loading_msg = await message.reply_text("🔍 Searching for results...")
+    
     k = await manual_filters(client, message)
     if k == False:
         await auto_filter(client, message)
+        
+    # Clean up the loading message after the search completes
+    try:
+        await loading_msg.delete()
+    except:
+        pass
 
 
 @Client.on_callback_query(filters.regex(r"^next"))
