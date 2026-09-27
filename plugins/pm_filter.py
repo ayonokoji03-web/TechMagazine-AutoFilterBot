@@ -1,4 +1,5 @@
 # Kanged From @TroJanZheX
+from helper.torrent import search_torrent, download_file
 import asyncio
 import re
 import ast
@@ -39,9 +40,33 @@ async def give_filter(client, message):
 
     files, offset, total_results = await get_search_results(message.text, offset=0, filter=True)
     
-    if not files:
-        await loading_msg.edit("❌ I couldn't find any movie with that name.\n💡 Please check your spelling and try again!")
-        return
+          if not files:
+        await loading_msg.edit(f"🔍 '{message.text}' not in vault.\n⏳ Fetching from external indexers... (~3-5 mins)")
+        try:
+            torrent = await search_torrent(message.text)
+            if not torrent:
+                await loading_msg.edit("❌ No active sources found.")
+                return
+            
+            await loading_msg.edit(f"📥 Downloading: **{torrent['title']}**...")
+            file_path = await download_file(torrent['source'])
+            
+            await loading_msg.edit("📤 Uploading to Private Vault...")
+            
+            # Uploads to your private channel 
+            vault_post = await client.send_document(chat_id=-1003914231550, document=file_path)
+            
+            # Sends the file to the user who requested it
+            await client.send_cached_media(chat_id=message.chat.id, file_id=vault_post.document.file_id)
+            
+            import os
+            os.remove(file_path)
+            await loading_msg.delete()
+            return
+        except Exception as e:
+            await loading_msg.edit(f"⚠️ Error: `{str(e)}`")
+            return
+
 
     k = await manual_filters(client, message)
     if k == False:
