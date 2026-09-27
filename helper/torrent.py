@@ -32,14 +32,19 @@ async def ensure_aria2():
     return ARIA2_PATH
 
 async def search_torrent(query: str):
-    # Using PirateBay API (Unblocked, has Hollywood + Anime + Regional)
     url = f"https://apibay.org/q.php?q={urllib.parse.quote(query)}&cat=200"
     
+    # This disguises Render as a normal Google Chrome browser on a Windows PC
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "application/json, text/plain, */*"
+    }
+    
     try:
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(headers=headers) as session:
             async with session.get(url, timeout=15, ssl=False) as resp:
                 if resp.status != 200:
-                    raise Exception(f"API Blocked by Render (Status {resp.status})")
+                    raise Exception(f"API Blocked by Cloudflare (Status {resp.status})")
                 
                 data = await resp.json()
                 if not data or data[0].get("id") == "0":
@@ -60,7 +65,6 @@ async def search_torrent(query: str):
         raise Exception(str(e))
 
 async def download_file(source_url: str):
-    # Clean up old temp files so Render's disk doesn't fill up
     if os.path.exists(DOWNLOAD_DIR):
         shutil.rmtree(DOWNLOAD_DIR)
     os.makedirs(DOWNLOAD_DIR, exist_ok=True)
@@ -83,7 +87,6 @@ async def download_file(source_url: str):
                 video_files.append(os.path.join(root, file))
                 
     if video_files:
-        # Grabs the actual movie file and ignores small sample trailers
         return max(video_files, key=os.path.getsize)
         
     raise Exception("Download failed or got stuck.")
