@@ -41,7 +41,7 @@ async def give_filter(client, message):
     files, offset, total_results = await get_search_results(message.text, offset=0, filter=True)
     
 if not files:
-        await loading_msg.edit(f"🔍 '{message.text}' not in vault.\n⏳ Fetching from external indexers... (~3-5 mins)")
+await loading_msg.edit(f"🔍 '{message.text}' not in vault.\n⏳ Fetching from external indexers... (~3-5 mins)")
         try:
             torrent = await search_torrent(message.text)
             if not torrent:
