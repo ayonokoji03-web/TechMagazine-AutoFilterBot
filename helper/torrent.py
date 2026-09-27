@@ -32,7 +32,11 @@ async def ensure_aria2():
 
 async def search_torrent(query: str):
     url = f"https://yts.mx/api/v2/list_movies.json?query_term={urllib.parse.quote(query)}&sort_by=seeds&limit=1"
-    async with aiohttp.ClientSession() as session:
+    
+    # This is the "Fake ID" so the site doesn't block Render
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36"}
+    
+    async with aiohttp.ClientSession(headers=headers) as session:
         try:
             async with session.get(url, timeout=10) as resp:
                 if resp.status == 200:
