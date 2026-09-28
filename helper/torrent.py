@@ -1,7 +1,7 @@
 import requests
 import feedparser
 
-def search_fallback_torrents(query):
+def search_torrent(query):
     results = ""
     
     # 1. Search TorrentCSV for Hollywood & Indian Films
@@ -31,3 +31,7 @@ def search_fallback_torrents(query):
         print(f"Nyaa error: {e}")
         
     return results if results else "No files found in the channel or fallback torrent databases."
+
+def download_file(*args, **kwargs):
+    # Dummy function to prevent ImportError in pm_filter.py
+    pass
