@@ -23,7 +23,6 @@ def search_fallback_torrents(query):
         feed = feedparser.parse(nyaa_url)
         if feed.entries:
             results += "🌸 **Anime Results:**\n"
-            # Limit to the top 3 results to avoid spamming the chat
             for entry in feed.entries[:3]:
                 title = entry.title
                 magnet_link = entry.link
