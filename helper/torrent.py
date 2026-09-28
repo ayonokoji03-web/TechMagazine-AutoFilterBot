@@ -1,7 +1,7 @@
 import requests
 import feedparser
 
-def search_torrent(query):
+async def search_torrent(query):
     results = ""
     
     # 1. Search TorrentCSV for Hollywood & Indian Films
@@ -32,6 +32,5 @@ def search_torrent(query):
         
     return results if results else "No files found in the channel or fallback torrent databases."
 
-def download_file(*args, **kwargs):
-    # Dummy function to prevent ImportError in pm_filter.py
+async def download_file(*args, **kwargs):
     pass
