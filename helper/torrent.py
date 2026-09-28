@@ -1,48 +1,34 @@
-import aiohttp
-import urllib.parse
+import requests
+import feedparser
 
-async def search_torrent(query: str):
-    # Disguise the bot as a standard Chrome web browser to bypass Cloudflare
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept": "application/json"
-    }
+def search_fallback_torrents(query):
+    results = ""
     
-    api_url = f"https://yts.mx/api/v2/list_movies.json?query_term={urllib.parse.quote(query)}&limit=1"
-    
+    # 1. Search TorrentCSV for Hollywood & Indian Films
+    csv_url = f"https://torrents-csv.com/service/search?q={query}&size=3"
     try:
-        async with aiohttp.ClientSession(headers=headers) as session:
-            async with session.get(api_url) as response:
-                if response.status != 200:
-                    return None
-                
-                data = await response.json()
-                
-                if not data.get("data") or not data["data"].get("movies"):
-                    return None
-                
-                movie = data["data"]["movies"][0]
-                title = movie.get("title_long", "Unknown Title")
-                
-                torrents = movie.get("torrents", [])
-                if not torrents:
-                    return None
-                    
-                torrent_hash = torrents[0]["hash"]
-                safe_title = urllib.parse.quote(title)
-                
-                magnet_link = f"magnet:?xt=urn:btih:{torrent_hash}&dn={safe_title}"
-                
-                return {
-                    "title": f"🎬 {title}",
-                    "source": magnet_link
-                }
-    except Exception:
-        return None
+        csv_data = requests.get(csv_url, timeout=5).json()
+        if "torrents" in csv_data and len(csv_data["torrents"]) > 0:
+            results += "🎬 **Movie Results:**\n"
+            for t in csv_data["torrents"]:
+                title = t.get('name', 'Unknown')
+                infohash = t.get('infohash', '')
+                results += f"🔹 {title}\n🧲 `magnet:?xt=urn:btih:{infohash}`\n\n"
+    except Exception as e:
+        print(f"TorrentCSV error: {e}")
 
-async def download_file(source_url: str):
-    raise Exception(
-        f"🧲 **Tap the link below to copy it:**\n\n"
-        f"`{source_url}`\n\n"
-        f"💡 *Paste this into LibreTorrent to start downloading!*"
-    )
+    # 2. Search Nyaa RSS for Anime
+    nyaa_url = f"https://nyaa.si/?page=rss&q={query}"
+    try:
+        feed = feedparser.parse(nyaa_url)
+        if feed.entries:
+            results += "🌸 **Anime Results:**\n"
+            # Limit to the top 3 results to avoid spamming the chat
+            for entry in feed.entries[:3]:
+                title = entry.title
+                magnet_link = entry.link
+                results += f"🔹 {title}\n🧲 `{magnet_link}`\n\n"
+    except Exception as e:
+        print(f"Nyaa error: {e}")
+        
+    return results if results else "No files found in the channel or fallback torrent databases."
