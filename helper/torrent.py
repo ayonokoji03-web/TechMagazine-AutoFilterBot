@@ -1,13 +1,15 @@
 import requests
 import feedparser
+import urllib.parse
 
 async def search_torrent(query: str):
-    # Closes bot's default formatting and adds an easy instruction guide for users
+    # Your live GitHub Pages bridge URL
+    bridge_url = "https://ayonokoji03-web.github.io/magnet-bridge/?url="
+    
+    # We still use the backtick trick to close the bot's default error formatting
     results = "`\n\n"
     results += "📌 **HOW TO USE:**\n"
-    results += "1. Find your preferred quality (1080p, 720p, etc.) below.\n"
-    results += "2. Tap directly on the link box to copy it instantly.\n"
-    results += "3. Paste it into LibreTorrent, TorrDroid, or your torrent app to download!\n\n"
+    results += "Tap the link below your movie. It will open a page with a 🚀 button that launches LibreTorrent directly!\n"
     results += "━━━━━━━━━━━━━━━━━━━━━━\n\n"
     
     found = False
@@ -22,7 +24,13 @@ async def search_torrent(query: str):
             for t in csv_data["torrents"]:
                 title = t.get('name', 'Unknown')
                 infohash = t.get('infohash', '')
-                results += f"🔹 **{title}**\n👉 Tap to copy:\n`magnet:?xt=urn:btih:{infohash}`\n\n"
+                magnet = f"magnet:?xt=urn:btih:{infohash}"
+                
+                # Encodes the magnet link safely into the URL
+                encoded_magnet = urllib.parse.quote(magnet, safe='')
+                final_link = f"{bridge_url}{encoded_magnet}"
+                
+                results += f"🔹 **{title}**\n▶️ [Tap here to Download]({final_link})\n\n"
     except Exception:
         pass
 
@@ -36,7 +44,11 @@ async def search_torrent(query: str):
             for entry in feed.entries[:3]:
                 title = entry.title
                 magnet_link = entry.link
-                results += f"🔹 **{title}**\n👉 Tap to copy:\n`{magnet_link}`\n\n"
+                
+                encoded_magnet = urllib.parse.quote(magnet_link, safe='')
+                final_link = f"{bridge_url}{encoded_magnet}"
+                
+                results += f"🔹 **{title}**\n▶️ [Tap here to Download]({final_link})\n\n"
     except Exception:
         pass
 
@@ -53,12 +65,14 @@ async def search_torrent(query: str):
                 if hasattr(entry, 'enclosures') and len(entry.enclosures) > 0:
                     torrent_link = entry.enclosures[0].href
                 
-                results += f"🔹 **{title}**\n👉 Tap to copy:\n`{torrent_link}`\n\n"
+                encoded_magnet = urllib.parse.quote(torrent_link, safe='')
+                final_link = f"{bridge_url}{encoded_magnet}"
+                
+                results += f"🔹 **{title}**\n▶️ [Tap here to Download]({final_link})\n\n"
     except Exception:
         pass
         
     if found:
-        # Closing backtick to match the opening error block
         results += "`"
         return {"title": query, "source": results}
     
