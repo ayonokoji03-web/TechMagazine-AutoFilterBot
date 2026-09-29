@@ -36,7 +36,7 @@ async def search_torrent(query: str):
         except Exception as e:
             print(f"CSV Error: {e}")
 
-        # 2. Fill remaining quota from Nyaa
+        # 2. If quota isn't full, move to Nyaa
         if current_results < target_results:
             nyaa_url = f"https://nyaa.si/?page=rss&q={query}"
             try:
@@ -55,7 +55,7 @@ async def search_torrent(query: str):
             except Exception as e:
                 print(f"Nyaa Error: {e}")
 
-        # 3. Fill remaining quota from LimeTorrents
+        # 3. If quota still isn't full, move to LimeTorrents
         if current_results < target_results:
             lime_url = f"https://www.limetorrents.lol/searchrss/{query}/"
             try:
