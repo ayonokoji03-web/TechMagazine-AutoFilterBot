@@ -45,7 +45,7 @@ async def give_filter(client, message):
         try:
             torrent = await search_torrent(message.text)
             if not torrent:
-                await loading_msg.edit("❌ No active sources found.")
+                await loading_msg.edit("❌ No active sources found - CHECK YOUR SPELLING AND TRY AGAIN.")
                 return
             
             await loading_msg.edit(f"📥 Downloading: **{torrent['title']}**...")
