@@ -11,8 +11,11 @@ async def search_torrent(query: str):
     current_results = 0
     found_any = False
     
-    # 1. Search TorrentCSV (This part was working fine)
-    csv_url = f"https://torrents-csv.com/service/search?q={query}&size=15"
+    # This safely converts spaces to URL format (e.g. "Demon Slayer" -> "Demon%20Slayer")
+    safe_query = urllib.parse.quote(query)
+    
+    # 1. Search TorrentCSV 
+    csv_url = f"https://torrents-csv.com/service/search?q={safe_query}&size=15"
     try:
         timeout = aiohttp.ClientTimeout(total=10)
         async with aiohttp.ClientSession(timeout=timeout) as session:
@@ -34,11 +37,10 @@ async def search_torrent(query: str):
     except Exception as e:
         print(f"CSV Error: {e}")
 
-    # 2. Nyaa (Restored to your original working feedparser method)
+    # 2. Nyaa
     if current_results < target_results:
-        nyaa_url = f"https://nyaa.si/?page=rss&q={query}"
+        nyaa_url = f"https://nyaa.si/?page=rss&q={safe_query}"
         try:
-            # Runs your original code in the background so it doesn't cause a 502 error
             feed = await asyncio.to_thread(feedparser.parse, nyaa_url) 
             if feed.entries:
                 results_text += "🌸 **Anime (Nyaa):**\n\n"
@@ -51,11 +53,10 @@ async def search_torrent(query: str):
         except Exception as e:
             print(f"Nyaa Error: {e}")
 
-    # 3. LimeTorrents (Restored to your EXACT original working method)
+    # 3. LimeTorrents
     if current_results < target_results:
-        lime_url = f"https://www.limetorrents.lol/searchrss/{query}/"
+        lime_url = f"https://www.limetorrents.lol/searchrss/{safe_query}/"
         try:
-            # Runs your original code in the background so it doesn't cause a 502 error
             lime_feed = await asyncio.to_thread(feedparser.parse, lime_url)
             if lime_feed.entries:
                 results_text += "🍋 **Classics (LimeTorrents):**\n\n"
