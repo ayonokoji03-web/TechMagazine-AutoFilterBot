@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import os
 
 # Get logging configurations
 logging.config.fileConfig('logging.conf')
@@ -18,7 +19,8 @@ from pyrogram import types
 from aiohttp import web
 from plugins import web_server
 
-PORT = "8080"
+# FIXED: Dynamically fetch Render's assigned port, default to 8080 if running locally
+PORT = os.environ.get("PORT", "8080")
 
 class Bot(Client):
 
@@ -44,10 +46,15 @@ class Bot(Client):
         temp.U_NAME = me.username
         temp.B_NAME = me.first_name
         self.username = '@' + me.username
+        
+        # Web server initialization
         app = web.AppRunner(await web_server())
         await app.setup()
         bind_address = "0.0.0.0"
-        await web.TCPSite(app, bind_address, PORT).start()
+        
+        # FIXED: Cast PORT to an integer so it binds correctly on Render
+        await web.TCPSite(app, bind_address, int(PORT)).start()
+        
         logging.info(f"{me.first_name} with for Pyrogram v{__version__} (Layer {layer}) started on {me.username}.")
         logging.info(LOG_STR)
 
